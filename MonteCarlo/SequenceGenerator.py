@@ -1,4 +1,5 @@
 import enum
+import matplotlib.pyplot as plt
 
 
 class TypeSeq(enum.Enum):
@@ -44,3 +45,16 @@ class SequenceGenerator:
                 for i in range(number_from, number_to, 1):
                     seq.append(self.generate_number(i))
             return seq
+
+
+if __name__ == '__main__':
+    vdc = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 227)
+    vdc2 = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 229)
+    l1 = []
+    l2 = []
+    for i in range(1, 2000):
+        l1.append(vdc.generate_number(i))
+        l2.append(vdc2.generate_number(i))
+
+    plt.scatter(l1, l2)
+    plt.show()
