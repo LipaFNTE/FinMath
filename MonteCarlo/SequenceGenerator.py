@@ -48,11 +48,11 @@ class SequenceGenerator:
 
 
 if __name__ == '__main__':
-    vdc = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 227)
-    vdc2 = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 229)
+    vdc = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 2)
+    vdc2 = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 3)
     l1 = []
     l2 = []
-    for i in range(1, 2000):
+    for i in range(1, 500):
         l1.append(vdc.generate_number(i))
         l2.append(vdc2.generate_number(i))
 
