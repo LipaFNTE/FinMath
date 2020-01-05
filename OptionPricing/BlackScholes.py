@@ -41,7 +41,7 @@ class BS(Instrument):
                                 self.sigma * np.sqrt(self.T[1] - self.T[0]) * self.Z[0])]
         for i in range(1, self.n):
             _s.append(_s[i - 1] * np.exp((self.r - 0.5 * self.sigma ** 2) * (self.T[i] - self.T[i - 1]) +
-                                         self.sigma * np.sqrt(self.T[i] - self.T[i - 1]) * self.Z[i - 1]))
+                                         self.sigma * np.sqrt(self.T[i] - self.T[i - 1]) * self.Z[i]))
         if ret_value:
             return _s
         else:

@@ -1,6 +1,7 @@
 import numpy as np
 from OptionPricing import Instrument, utils
 
+
 class Payoff:
     def __init__(self, instrument: Instrument, call):
         self.instrument = instrument
@@ -60,33 +61,35 @@ class Asian(TrajectoryPayoff):
         s_ = np.mean(self.instrument.s)
 
         if self.call:
-            return max(s_ - self.instrument.K, 0) * np.exp(-self.instrument.r * self.instrument.T[len(self.instrument.T)-1])
+            return max(s_ - self.instrument.K, 0) * np.exp(
+                -self.instrument.r * self.instrument.T[len(self.instrument.T) - 1])
         else:
-            return max(self.instrument.K - s_, 0) * np.exp(-self.instrument.r * self.instrument.T[len(self.instrument.T)-1])
+            return max(self.instrument.K - s_, 0) * np.exp(
+                -self.instrument.r * self.instrument.T[len(self.instrument.T) - 1])
 
     def delta(self, method: utils.GreekMethod):
         if method == utils.GreekMethod.TRAJECTORY_DIFFERENTIATION:
             ind = self.get_indicator()
-            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T) - 1]) * ind *\
+            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T) - 1]) * ind * \
                    np.mean(self.instrument.s) / self.instrument.s[0]
         if method == utils.GreekMethod.LIKELIHOOD_RATIO:
-            return self.payoff_function()*self.instrument.Z[0]/\
-                   (self.instrument.s_0*self.instrument.sigma * np.sqrt(self.instrument.T[0]))
+            return self.payoff_function() * self.instrument.Z[0] / \
+                   (self.instrument.s_0 * self.instrument.sigma * np.sqrt(self.instrument.T[0]))
 
     def vega(self, method: utils.GreekMethod):
         if method == utils.GreekMethod.TRAJECTORY_DIFFERENTIATION:
             ind = self.get_indicator()
             sig_diff = self.sigma_diff()
-            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T )- 1]) * ind * sig_diff
+            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T) - 1]) * ind * sig_diff
         if method == utils.GreekMethod.LIKELIHOOD_RATIO:
-            return self.payoff_function()*self.get_vega_sum()
+            return self.payoff_function() * self.get_vega_sum()
 
     def sigma_diff(self):
         _s = []
         for i in range(1, len(self.instrument.s)):
             v1 = 0
             for j in range(1, i):
-                v1 = v1 + np.sqrt(self.instrument.T[j] - self.instrument.T[j - 1]) * self.instrument.Z[j-1]
+                v1 = v1 + np.sqrt(self.instrument.T[j] - self.instrument.T[j - 1]) * self.instrument.Z[j]
             _s.append(self.instrument.s[i] * (- self.instrument.sigma * self.instrument.T[i] + v1))
         return np.mean(_s)
 
@@ -97,7 +100,9 @@ class Asian(TrajectoryPayoff):
             return int((self.instrument.K - np.mean(self.instrument.s)) == True)
 
     def get_vega_sum(self):
-        v = [(self.instrument.Z[0]**2 - 1)/self.instrument.sigma - self.instrument.Z[0]*np.sqrt(self.instrument.T[0])]
+        v = [(self.instrument.Z[0] ** 2 - 1) / self.instrument.sigma - self.instrument.Z[0] * np.sqrt(
+            self.instrument.T[0])]
         for i in range(1, self.instrument.n):
-            (self.instrument.Z[i]**2 - 1)/self.instrument.sigma - self.instrument.Z[0]*np.sqrt(self.instrument.T[i] - self.instrument.T[i-1])
+            (self.instrument.Z[i] ** 2 - 1) / self.instrument.sigma - self.instrument.Z[0] * np.sqrt(
+                self.instrument.T[i] - self.instrument.T[i - 1])
         return sum(v)
