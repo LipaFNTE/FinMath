@@ -34,14 +34,3 @@ class Greeks:
             greeks[greek] = [np.mean(data[greek]), np.std(data[greek])/np.sqrt(self.n)]
 
         return greeks
-
-
-if __name__ == '__main__':
-    bs = BS(0, 0.2, 0.05, 0, 100, 100, [i/12 for i in range(1, 13)], True)
-
-    greeks = {}
-    for k in range(1000, 10000, 1000):
-        g = Greeks(bs, Payoff.Asian(bs, True), utils.GreekMethod.TRAJECTORY_DIFFERENTIATION, k)
-        greeks[k] = g.calculate_greeks(['delta'])
-
-    print(greeks)
