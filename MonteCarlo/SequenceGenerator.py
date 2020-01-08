@@ -1,9 +1,13 @@
 import enum
 import matplotlib.pyplot as plt
+import sobol_seq
 
 
 class TypeSeq(enum.Enum):
     VAN_DER_CORPUT = 1
+    HALTON = 2
+    SOBOL = 3
+    HAMMERSLEY = 4
 
 
 class SequenceMethod:
