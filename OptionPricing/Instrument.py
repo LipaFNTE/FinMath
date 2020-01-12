@@ -1,5 +1,5 @@
 class Instrument:
-    def __init__(self,  T, r, mu, sigma, s_0, K):
+    def __init__(self,  s_0, K, T, r, mu, sigma):
         self.s_0 = s_0
         self.K = K
         self.T = T

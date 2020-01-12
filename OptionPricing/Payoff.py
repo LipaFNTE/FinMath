@@ -3,8 +3,7 @@ from OptionPricing import Instrument, utils
 
 
 class Payoff:
-    def __init__(self, instrument: Instrument, call):
-        self.instrument = instrument
+    def __init__(self, call):
         self.call = call
 
     def payoff_function(self):
@@ -24,85 +23,118 @@ class Payoff:
 
 
 class ClassicPayoff(Payoff):
-    def __init__(self, instrument: Instrument, call):
-        super().__init__(instrument, call)
+    def __init__(self, call):
+        super().__init__(call)
+
+    def payoff_function(self, s_T, r, T, K):
+        if self.call:
+            return np.exp(-r * T) * np.max(s_T - K, 0)
+        else:
+            return np.exp(-r * T) * np.max(K - s_T, 0)
 
 
 class TrajectoryPayoff(Payoff):
-    def __init__(self, instrument: Instrument, call):
-        super().__init__(instrument, call)
+    def __init__(self, call):
+        super().__init__(call)
 
     def payoff_function(self):
         pass
 
 
 class BarrierOut(TrajectoryPayoff):
-    def __init__(self, A, B, instrument: Instrument, call):
-        super().__init__(instrument, call)
+    def __init__(self, A, B, call):
+        super().__init__(call)
         self.A = A
         self.B = B
 
-    def payoff_function(self):
-        for i in range(len(self.s)):
-            if (self.s[i] <= self.A) | (self.s[i] >= self.B):
+    def payoff_function(self, s: list, r, T, K):
+        for i in range(len(s)):
+            if (s[i] <= self.A) | (s[i] >= self.B):
                 return 0
         if self.call:
-            return max(self.s[len(self.s) - 1] - self.K, 0) * np.exp(-self.r * self.T)
+            return max(s[len(s) - 1] - K, 0) * np.exp(-r * T)
         else:
-            return max(self.K - self.s[len(self.s) - 1], 0) * np.exp(-self.r * self.T)
+            return max(K - s[len(s) - 1], 0) * np.exp(-r * T)
 
 
 class Asian(TrajectoryPayoff):
-    def __init__(self, instrument: Instrument, call):
-        super().__init__(instrument, call)
-        self.t = instrument.T
+    def __init__(self, call):
+        super().__init__(call)
 
-    def payoff_function(self):
-        s_ = np.mean(self.instrument.s)
+    def payoff_function(self, s: list, K, r, T: list):
+        s_ = np.mean(s)
 
         if self.call:
-            return max(s_ - self.instrument.K, 0) * np.exp(
-                -self.instrument.r * self.instrument.T[len(self.instrument.T) - 1])
+            return max(s_ - K, 0) * np.exp(
+                -r * T[len(T) - 1])
         else:
-            return max(self.instrument.K - s_, 0) * np.exp(
-                -self.instrument.r * self.instrument.T[len(self.instrument.T) - 1])
+            return max(K - s_, 0) * np.exp(
+                -r * T[len(T) - 1])
 
-    def delta(self, method: utils.GreekMethod):
+    def delta(self, s: list, K, r, T: list, sigma, Z: list, method: utils.GreekMethod):
         if method == utils.GreekMethod.TRAJECTORY_DIFFERENTIATION:
             ind = self.get_indicator()
-            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T) - 1]) * ind * \
-                   np.mean(self.instrument.s) / self.instrument.s[0]
+            return np.exp(- r * T[len(T) - 1]) * ind * \
+                   np.mean(s) / s[0]
         if method == utils.GreekMethod.LIKELIHOOD_RATIO:
-            return self.payoff_function() * self.instrument.Z[0] / \
-                   (self.instrument.s_0 * self.instrument.sigma * np.sqrt(self.instrument.T[0]))
+            return self.payoff_function(s, K, r, T) * Z[0] / \
+                   (s[0] * sigma * np.sqrt(T[0]))
 
-    def vega(self, method: utils.GreekMethod):
+    def vega(self, s, K, r, T, method: utils.GreekMethod):
         if method == utils.GreekMethod.TRAJECTORY_DIFFERENTIATION:
             ind = self.get_indicator()
             sig_diff = self.sigma_diff()
-            return np.exp(- self.instrument.r * self.instrument.T[len(self.instrument.T) - 1]) * ind * sig_diff
+            return np.exp(- r * T[len(T) - 1]) * ind * sig_diff
         if method == utils.GreekMethod.LIKELIHOOD_RATIO:
-            return self.payoff_function() * self.get_vega_sum()
+            return self.payoff_function(s, K, r, K) * self.get_vega_sum()
 
-    def sigma_diff(self):
+    def sigma_diff(self, s: list, T: list, sigma, Z: list):
         _s = []
-        for i in range(1, len(self.instrument.s)):
+        for i in range(1, len(s)):
             v1 = 0
             for j in range(1, i):
-                v1 = v1 + np.sqrt(self.instrument.T[j] - self.instrument.T[j - 1]) * self.instrument.Z[j]
-            _s.append(self.instrument.s[i] * (- self.instrument.sigma * self.instrument.T[i] + v1))
+                v1 = v1 + np.sqrt(T[j] - T[j - 1]) * Z[j]
+            _s.append(s[i] * (- sigma * T[i] + v1))
         return np.mean(_s)
 
-    def get_indicator(self):
+    def get_indicator(self, s: list, K):
         if self.call:
-            return int((np.mean(self.instrument.s) > self.instrument.K) == True)
+            return int((np.mean(s) > K) == True)
         else:
-            return int((self.instrument.K - np.mean(self.instrument.s)) == True)
+            return int((K - np.mean(s)) == True)
 
-    def get_vega_sum(self):
-        v = [(self.instrument.Z[0] ** 2 - 1) / self.instrument.sigma - self.instrument.Z[0] * np.sqrt(
-            self.instrument.T[0])]
-        for i in range(1, self.instrument.n):
-            (self.instrument.Z[i] ** 2 - 1) / self.instrument.sigma - self.instrument.Z[0] * np.sqrt(
-                self.instrument.T[i] - self.instrument.T[i - 1])
+    def get_vega_sum(self, T: list, sigma, Z: list):
+        v = [(Z[0] ** 2 - 1) / sigma - Z[0] * np.sqrt(
+            T[0])]
+        for i in range(1, len(T)):
+            (Z[i] ** 2 - 1) / sigma - Z[0] * np.sqrt(
+                T[i] - T[i - 1])
         return sum(v)
+
+
+class BasketOption(Payoff):
+    def __init__(self):
+        pass
+
+
+class MinOption(BasketOption):
+    pass
+
+
+class MaxOption(BasketOption):
+    pass
+
+
+class Altiplano(BasketOption):
+    pass
+
+
+class Atlas(BasketOption):
+    pass
+
+
+class Himalaya(BasketOption):
+    pass
+
+
+
