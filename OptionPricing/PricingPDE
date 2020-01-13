@@ -1,0 +1,52 @@
+import numpy as np
+import enum
+from OptionPricing import Payoff
+from numpy import matrix
+
+class MethodPDE(enum.Enum):
+    EXPLICITE = 1
+    IMPLICIT = 2
+    IMEX = 3
+
+
+class PricingPDE:
+    def __init__(self, method: MethodPDE):
+        self.method = MethodPDE
+
+    def pricing_european_option(self, sigma, r, K, T, L, M, N, theta):
+        pass
+
+    def _generate_deltas(self, T, L, M, N):
+        return T/M, L/(N + 1)
+
+    def _generate_grid(self, T, L, M, N):
+        dt, ds = self._generate_deltas(T, L, M, N)
+        t = [i * dt for i in range(M)]
+        s = [L + k * ds for k in range(1, N + 1)]
+        return t, s
+
+    def _generate_params(self, sigma, r, T, L, M, N):
+        t, s = self._generate_grid(T, L, M, N)
+        dt, ds = self._generate_deltas(T, L, M, N)
+        alpha = [0.5 * (pow(sigma * s[j - 1], 2) / pow(ds, 2) - (r * s[j - 1]) / ds) for j in
+                 range(1, N + 1)]
+        gamma = [0.5 * (pow(sigma * s[j - 1], 2) / pow(ds, 2) + (r * s[j - 1]) / ds) for j in
+                 range(1, N + 1)]
+        beta = [-((pow(sigma * s[j - 1], 2) / pow(ds, 2)) + r) for j in range(1, N + 1)]
+        return alpha, beta, gamma
+
+    def _generate_boundaries(self, r, K, T, L, M, N):
+        t, s = self._generate_grid(T, L, M, N)
+        v_0 = [K * np.exp(-r * (T - t_i)) for t_i in t]
+        v_N = []
+        return v_0, v_N
+
+    def _create_A_matrix(self, sigma, r, T, L, M, N):
+        alpha, beta, gamma = self._generate_params(sigma, r, T, L, M, N)
+        r0 = [beta[0], gamma[0]] + [0 for _ in range(N)]
+        res = [[beta[0], gamma[0]] + [0 for _ in range(N - 2)]]
+        for i in range(1, N):
+            if i == 1:
+                r = [alpha[i], beta[i], gamma[i]] + [0 for _ in range(N - 3)]
+            else:
+                r = [0 for _ in range(i - 1)]

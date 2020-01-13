@@ -39,9 +39,9 @@ class SequenceGenerator:
                 count = count + 1
             return sum(a)
 
-    def generate_sequence(self, seq_type: TypeSeq, number_to, number_from=1, number_list=None):
+    def generate_sequence(self, number_to, number_from=1, number_list=None):
         seq = []
-        if seq_type == TypeSeq.VAN_DER_CORPUT:
+        if self.type == TypeSeq.VAN_DER_CORPUT:
             if number_list is not None:
                 for k in number_list:
                     seq.append(self.generate_number(k))
@@ -49,7 +49,9 @@ class SequenceGenerator:
                 for i in range(number_from, number_to, 1):
                     seq.append(self.generate_number(i))
             return seq
-
+        if self.type == TypeSeq.SOBOL:
+            sob = sobol_seq.i4_sobol_generate(1, number_to)
+            return [k[0] for k in sob]
 
 if __name__ == '__main__':
     vdc = SequenceGenerator(TypeSeq.VAN_DER_CORPUT, 2)

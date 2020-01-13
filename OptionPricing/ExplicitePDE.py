@@ -43,6 +43,8 @@ class ExplicitePDE:
                 pass
             term_N = self.dt * alpha[self.N - 1] * prev[self.N - 2] + (1 + self.dt * beta[self.N - 1]) * prev[self.N - 1] + self.dt * gamma[self.N - 1] * v_N[i + 1]
 
+    def european_pde(self, sigma, r, K, T, L, M, N, theta):
+        pass
 
 if __name__ == '__main__':
     pass
