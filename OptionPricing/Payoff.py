@@ -28,9 +28,9 @@ class ClassicPayoff(Payoff):
 
     def payoff_function(self, s_T, r, T, K):
         if self.call:
-            return np.exp(-r * T) * np.max(s_T - K, 0)
+            return np.exp(-r * T) * max(s_T - K, 0)
         else:
-            return np.exp(-r * T) * np.max(K - s_T, 0)
+            return np.exp(-r * T) * max(K - s_T, 0)
 
 
 class TrajectoryPayoff(Payoff):
