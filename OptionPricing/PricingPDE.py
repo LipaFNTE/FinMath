@@ -21,18 +21,18 @@ class PricingPDE:
         alpha, beta, gamma = self._generate_params(sigma, r, T, L, M, N)
         A = self.create_A_matrix(sigma, r, T, L, M, N)
         prev = [payoff.payoff_function(i, r, T, K) for i in s]
+        prev_d = [alpha[0]*payoff.payoff_function(s[0], r, T, K)] + [0 for _ in range(N - 2)] + [gamma[len(gamma) - 1]*payoff.payoff_function(s[len(s) - 1], r, T, K)]
         T_calc = self._calculate_T(dt, theta, A, N)
         count = 0
         v = []
         for i in range(M - 2, -1, -1):
             d_i = [alpha[0]*payoff.payoff_function(s[0], r, t[i], K)] + [0 for _ in range(N - 2)] + [gamma[len(gamma) - 1]*payoff.payoff_function(s[len(s) - 1], r, t[i], K)]
-            d_i1 = [alpha[0] * ds * payoff.payoff_function(s[0], r, t[i], K)] + [0 for _ in range(N - 2)] + [
-                gamma[len(gamma) - 1] * ds * payoff.payoff_function(s[len(s) - 1], r, t[i], K)]
             v1 = np.dot((np.identity(N) + dt * (1 - theta) * A), prev)
-            v2 = [dt * w for w in [sum(x) for x in zip([theta * i for i in d_i], [(1 - theta) * s for s in d_i1])]]
+            v2 = [dt * w for w in [sum(x) for x in zip([theta * i for i in d_i], [(1 - theta) * s for s in prev_d])]]
             fin_b = [sum(x) for x in zip(v1, v2)]
             v.append([float(x) for x in np.linalg.solve(T_calc, np.transpose(fin_b[0]))])
             prev = v[count]
+            prev_d = d_i
             count = count + 1
 
         return v[len(v) - 1]
@@ -83,5 +83,5 @@ class PricingPDE:
 
 if __name__ == '__main__':
     pricing = PricingPDE(MethodPDE.IMEX)
-    v = pricing.pricing_european_option(0.2, 0.02, 100, 1, 160, 50, 10, 0.5, Payoff.ClassicPayoff(True))
+    v = pricing.pricing_european_option(0.2, 0.02, 100, 1, 200, 10000, 300, 0.5, Payoff.ClassicPayoff(True))
     print(v)
