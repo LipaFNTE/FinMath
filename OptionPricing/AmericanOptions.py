@@ -12,7 +12,6 @@ class AmericanOptions(Payoff.TrajectoryPayoff):
         self.d = d
         self.delta = self.T/self.M
 
-
     def pricingOption(self, r, K, s0, sigma, T, N, M, d, call, itm: bool):
         delta = T/M
         s = self.generate_trajectory(r, s0, sigma, N, M, delta)
@@ -59,7 +58,7 @@ class AmericanOptions(Payoff.TrajectoryPayoff):
         if call:
             return [np.exp(-T*r) * max(s_ - k, 0) for s_ in s]
         else:
-            return [T * max(k - s_, 0) for s_ in s]
+            return [np.exp(-T*r) * max(k - s_, 0) for s_ in s]
 
     def getValue(self, s, k, m, r, delta, call):
         if call:
@@ -79,4 +78,4 @@ class AmericanOptions(Payoff.TrajectoryPayoff):
 
 if __name__ == '__main__':
     ao = AmericanOptions(1, 1000, 100, 3, False)
-    print(ao.pricingOption(0.01, 100, 95, 0.15, 1, 20000, 100, 3, False, True))
+    print(ao.pricingOption(0.01, 100, 95, 0.15, 1, 8000, 600, 3, False, True))
