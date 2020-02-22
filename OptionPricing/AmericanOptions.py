@@ -29,7 +29,7 @@ class AmericanOptions(Payoff.TrajectoryPayoff):
             for i in range(len(v)):
                 if v[i] >= c[i]:
                     opt[i] = v[i]
-        return np.mean(list(opt.values()))
+        return [np.mean(list(opt.values())), np.std(list(opt.values()))/np.sqrt(N)]
 
     def generate_trajectory(self, r, s0, sigma, N, M, delta):
         s = {0: [s0 for _ in range(N - 1)]}
